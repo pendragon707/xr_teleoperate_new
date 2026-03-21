@@ -1,3 +1,4 @@
+import math
 import time
 import argparse
 from multiprocessing import Value, Array, Lock
@@ -365,33 +366,41 @@ if __name__ == '__main__':
                 if tele_data.left_ctrl_thumbstick and tele_data.right_ctrl_thumbstick:
                     loco_wrapper.Damp()
                 # https://github.com/unitreerobotics/xr_teleoperate/issues/135, control, limit velocity to within 0.3
-                if args.head-rotate:
+                if args.head_rotate:
+                    logger_mp.info("HEAD head_rotate")
+                                   
                     rotation_matrix = tele_data.head_pose[:3, :3]    
+                    logger_mp.info(rotation_matrix)
 
                     try:
                         # Calculate yaw using atan2 on the X and Z components of the rotation matrix
                         current_head_yaw = math.atan2(rotation_matrix[0, 2], rotation_matrix[2, 2])   
                         # current_head_yaw = math.atan2(rotation_matrix[2, 0], rotation_matrix[0, 0])
                     except Exception:
-                        current_head_yaw = 0.0      
+                        current_head_yaw = 0.0     
+
+                    logger_mp.info(current_head_yaw) 
 
                     # Как-то так можно объединить джойстик и поворот головы. Потом.
                     # if tele_data.tele_state.left_thumbstick_state: 
                     #     self.head_yaw_ref = current_head_yaw  
-                    self.head_yaw_ref = 0
+                    head_yaw_ref = 0
 
-                    yaw_diff = current_head_yaw - self.head_yaw_ref
+                    yaw_diff = current_head_yaw - head_yaw_ref
 
                     # limit velocity to within 0.3
                     YAW_GAIN = 2.0 
                     robot_angular_vel = -yaw_diff * YAW_GAIN
                     robot_angular_vel = np.clip(robot_angular_vel, -0.3, 0.3)        
 
+                    logger_mp.info(robot_angular_vel) 
+
                     loco_wrapper.Move(-tele_data.tele_state.left_thumbstick_value[1]  * 0.3,
                                   -tele_data.tele_state.left_thumbstick_value[0]  * 0.3,
                                   robot_angular_vel)
 
                 else:
+                    logger_mp.info("NOT HEAD head_rotate")
                     # control, limit velocity to within 0.3
                     loco_wrapper.Move(-tele_data.tele_state.left_thumbstick_value[1]  * 0.3,
                                     -tele_data.tele_state.left_thumbstick_value[0]  * 0.3,
