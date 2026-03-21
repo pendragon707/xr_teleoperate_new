@@ -360,11 +360,17 @@ class Dex3_1_Controller_XR:
             right_q_target = np.zeros(Dex3_Num_Motors, dtype=np.float64)
 
             # Tested poses (full close/open)
-            DEX3_OPEN_POSE_LEFT  = np.array([ 0.0,  1.05,  1.75,  -1.57,  -1.75,  -1.57,  -1.75])
-            DEX3_CLOSE_POSE_LEFT = np.array([ 0.0,  -0.724,  0.0,  0.0,  0.0,  0.0,  0.0])
+            DEX3_OPEN_POSE_LEFT  = np.array([0.0,  1.05,  1.75,  -1.57,  -1.75,  -1.57,  -1.75])
+            DEX3_CLOSE_POSE_LEFT = np.array([0.0,  -0.724,  0.0,  0.0,  0.0,  0.0,  0.0])
             
-            DEX3_OPEN_POSE_RIGHT  = np.array([ 0.0,  -1.05,  -1.75,  1.57,  1.75,  1.57,  1.75])
-            DEX3_CLOSE_POSE_RIGHT = np.array([ 0.0,  0.724,  0.0,  0.0,  0.0,  0.0,  0.0])
+            DEX3_OPEN_POSE_RIGHT  = np.array([0.0,  -1.05,  -1.75,  1.57,  1.75,  1.57,  1.75])
+            DEX3_CLOSE_POSE_RIGHT = np.array([0.0,  0.724,  0.0,  0.0,  0.0,  0.0,  0.0])
+
+            # DEX3_OPEN_POSE_LEFT  = np.array([0.0,  -0.724,  0.0,  -1.57,  -1.75,  -1.57,  -1.75])
+            # DEX3_CLOSE_POSE_LEFT = np.array([0.0,  1.05,  1.75,  0.0,  0.0,  0.0,  0.0])
+            
+            # DEX3_OPEN_POSE_RIGHT  = np.array([0.0,  0.724,  0.0,  1.57,  1.75,  1.57,  1.75])
+            # DEX3_CLOSE_POSE_RIGHT = np.array([0.0,  -1.05,  -1.75,  0.0,  0.0,  0.0,  0.0])
 
             # Values initialization (for smoothing)
             l_fingers = 0.0
@@ -431,10 +437,12 @@ class Dex3_1_Controller_XR:
 
                     # --- MAIN LOGIC ---
                     # 1. CLAMP (use raw values)
-                    l_fingers_clamped = np.clip(l_fingers_raw , 0.0, 10.0)
-                    r_fingers_clamped = np.clip(r_fingers_raw , 0.0, 10.0)
-                    l_thumb_clamped   = np.clip(l_thumb_raw, 0.0, 10.0)
-                    r_thumb_clamped   = np.clip(r_thumb_raw, 0.0, 10.0)
+                    # trigger: 0..10
+                    l_fingers_clamped = np.clip(l_fingers_raw, 0.0, 10.0)
+                    r_fingers_clamped = np.clip(r_fingers_raw, 0.0, 10.0)
+                    # squeeze/grip: 0..1
+                    l_thumb_clamped   = np.clip(l_thumb_raw, 0.0, 1.0)
+                    r_thumb_clamped   = np.clip(r_thumb_raw, 0.0, 1.0)
 
                     # 2. TARGET CALCULATION (normalization to 0..1) (full close)
                     # target_l_fingers = l_fingers_clamped / 10.0 
@@ -445,8 +453,9 @@ class Dex3_1_Controller_XR:
                     # for not-full open/close
                     target_l_fingers = 0.85 * (l_fingers_clamped / 10.0) 
                     target_r_fingers = 0.85 * (r_fingers_clamped / 10.0)
-                    target_l_thumb   = 0.80 * (l_thumb_clamped / 10.0)
-                    target_r_thumb   = 0.80 * (r_thumb_clamped / 10.0)
+
+                    target_l_thumb   = 0.80 * (1 - l_thumb_clamped / 1.0)
+                    target_r_thumb   = 0.80 * (1 - r_thumb_clamped / 1.0)
 
                     # 3. SMOOTHING (EXP)
                     l_fingers = l_fingers * (1 - SMOOTH_FACTOR) + target_l_fingers * SMOOTH_FACTOR
