@@ -173,6 +173,8 @@ class TeleData:
     left_ctrl_bButton: bool = False        # True if B(Y) button is pressed
     left_ctrl_thumbstick: bool = False     # True if thumbstick button is pressed
     left_ctrl_thumbstickValue: np.ndarray = field(default_factory=lambda: np.zeros(2)) # 2D vector (x, y), normalized
+    left_thumbstick_x: float = 0.0    # X axis (-1..1)
+    left_thumbstick_y: float = 0.0    # Y axis (-1..1)
     """ thumbstickValue explanation:
                     front (0,-1)
                        ^
@@ -190,7 +192,8 @@ class TeleData:
     right_ctrl_bButton: bool = False       # True if B button is pressed
     right_ctrl_thumbstick: bool = False    # True if thumbstick button is pressed
     right_ctrl_thumbstickValue: np.ndarray = field(default_factory=lambda: np.zeros(2)) # 2D vector (x, y), normalized
-
+    right_thumbstick_x: float = 0.0   
+    right_thumbstick_y: float = 0.0 
 
 class TeleVuerWrapper:
     def __init__(self, use_hand_tracking: bool, binocular: bool=True, img_shape: tuple=(480, 1280), display_fps: float=30.0,
@@ -413,22 +416,34 @@ class TeleVuerWrapper:
                 head_pose=Brobot_world_head,
                 left_wrist_pose=left_IPunitree_Brobot_wrist_arm,
                 right_wrist_pose=right_IPunitree_Brobot_wrist_arm,
+
+                # left triggers
                 left_ctrl_trigger=self.tvuer.left_ctrl_trigger,
                 left_ctrl_triggerValue=10.0 - self.tvuer.left_ctrl_triggerValue * 10,
                 left_ctrl_squeeze=self.tvuer.left_ctrl_squeeze,
                 left_ctrl_squeezeValue=self.tvuer.left_ctrl_squeezeValue,
+
+                # Left X/Y, (A/B right for PICO), thumbstick
                 left_ctrl_aButton=self.tvuer.left_ctrl_aButton,
                 left_ctrl_bButton=self.tvuer.left_ctrl_bButton,
                 left_ctrl_thumbstick=self.tvuer.left_ctrl_thumbstick,
                 left_ctrl_thumbstickValue=self.tvuer.left_ctrl_thumbstickValue,
+                left_thumbstick_x=self.tvuer.left_ctrl_thumbstickValue[0],
+                left_thumbstick_y=self.tvuer.left_ctrl_thumbstickValue[1],                
+
+                # right triggers
                 right_ctrl_trigger=self.tvuer.right_ctrl_trigger,
                 right_ctrl_triggerValue=10.0 - self.tvuer.right_ctrl_triggerValue * 10,
                 right_ctrl_squeeze=self.tvuer.right_ctrl_squeeze,
                 right_ctrl_squeezeValue=self.tvuer.right_ctrl_squeezeValue,
+
+                # Right X/Y, (A/B right for PICO), thumbstick
                 right_ctrl_aButton=self.tvuer.right_ctrl_aButton,
                 right_ctrl_bButton=self.tvuer.right_ctrl_bButton,
                 right_ctrl_thumbstick=self.tvuer.right_ctrl_thumbstick,
                 right_ctrl_thumbstickValue=self.tvuer.right_ctrl_thumbstickValue,
+                right_thumbstick_x=self.tvuer.right_ctrl_thumbstickValue[0],
+                right_thumbstick_y=self.tvuer.right_ctrl_thumbstickValue[1],                
             )
         
     def render_to_xr(self, img):

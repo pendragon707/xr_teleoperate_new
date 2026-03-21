@@ -125,6 +125,8 @@ For more information, you can refer to [Official Documentation ](https://support
 (tv) unitree@Host:~$ cd xr_teleoperate
 # Shallow clone submodule
 (tv) unitree@Host:~/xr_teleoperate$ git submodule update --init --depth 1
+
+pip install 'vuer[all]'
 ```
 
 ```bash
@@ -172,6 +174,9 @@ build  cert.pem  key.pem  LICENSE  pyproject.toml  README.md  rootCA.key  rootCA
 (tv) unitree@Host:~/xr_teleoperate/teleop/televuer$ source ~/.bashrc
 ```
 
+```
+(tv) unitree@Host:~/xr_teleoperate$ pip install -r requirements.txt 
+```
 
 
 ## 1.2 🕹️ unitree_sdk2_python
