@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 from typing import Literal
 
+import logging_mp
+logger_mp = logging_mp.getLogger(__name__)
 
 class TeleVuer:
     def __init__(self, use_hand_tracking: bool, binocular: bool=True, img_shape: tuple=None, display_fps: float=30.0,
@@ -182,7 +184,7 @@ class TeleVuer:
         except KeyboardInterrupt:
             pass
         except Exception as e:
-            print(f"Vuer encountered an error: {e}")
+            logger_mp.error(f"Vuer encountered an error: {e}")
         finally:
             if hasattr(self, "stop_writer_event"):
                 self.stop_writer_event.set()
@@ -200,7 +202,7 @@ class TeleVuer:
     
     def render_to_xr(self, image):
         if self.webrtc or self.display_mode == "pass-through":
-            print("[TeleVuer] Warning: render_to_xr is ignored when webrtc is enabled or pass_through is True.")
+            logger_mp.info("[TeleVuer] Warning: render_to_xr is ignored when webrtc is enabled or pass_through is True.")
             return
         self.latest_frame = image
         self.new_frame_event.set()
@@ -220,10 +222,16 @@ class TeleVuer:
 
     async def on_cam_move(self, event, session, fps=60):
         try:
+            logger_mp.info("CAMERA_MOVE event received!")
+            logger_mp.info(f"[CAMERA_MOVE] received, value keys: {event.value.keys() if event.value else None}")            
+            logger_mp.info("Event value keys:", event.value.keys())
+            logger_mp.info("Camera matrix:", event.value["camera"]["matrix"])
+
             with self.head_pose_shared.get_lock():
-                self.head_pose_shared[:] = event.value["camera"]["matrix"]
-        except:
-            pass
+                # self.head_pose_shared[:] = event.value["camera"]["matrix"]
+                self.head_pose_shared[:] = event.value.get("matrix", None)
+        except Exception as e:
+            logger_mp.error(f"Error in on_cam_move: {e}")
 
     async def on_controller_move(self, event, session, fps=60):
         """https://docs.vuer.ai/en/latest/examples/20_motion_controllers.html"""
