@@ -6,6 +6,7 @@ import threading
 import logging_mp
 logging_mp.basicConfig(level=logging_mp.INFO)
 logger_mp = logging_mp.getLogger(__name__)
+import numpy as np
 
 import os 
 import sys
@@ -379,7 +380,7 @@ if __name__ == '__main__':
                     except Exception:
                         current_head_yaw = 0.0     
 
-                    logger_mp.info(current_head_yaw) 
+                    logger_mp.info(f"current_head_yaw {current_head_yaw}") 
 
                     # Как-то так можно объединить джойстик и поворот головы. Потом.
                     # if tele_data.tele_state.left_thumbstick_state: 
@@ -393,18 +394,19 @@ if __name__ == '__main__':
                     robot_angular_vel = -yaw_diff * YAW_GAIN
                     robot_angular_vel = np.clip(robot_angular_vel, -0.3, 0.3)        
 
-                    logger_mp.info(robot_angular_vel) 
+                    logger_mp.info(f"robot_angular_vel {robot_angular_vel}") 
 
-                    loco_wrapper.Move(-tele_data.tele_state.left_thumbstick_value[1]  * 0.3,
-                                  -tele_data.tele_state.left_thumbstick_value[0]  * 0.3,
+                    loco_wrapper.Move(-tele_data.left_ctrl_thumbstickValue[1]  * 0.3,
+                                  -tele_data.left_ctrl_thumbstickValue[0]  * 0.3,
                                   robot_angular_vel)
 
                 else:
                     logger_mp.info("NOT HEAD head_rotate")
                     # control, limit velocity to within 0.3
-                    loco_wrapper.Move(-tele_data.tele_state.left_thumbstick_value[1]  * 0.3,
-                                    -tele_data.tele_state.left_thumbstick_value[0]  * 0.3,
-                                    -tele_data.tele_state.right_thumbstick_value[0] * 0.3)             
+                    loco_wrapper.Move(-tele_data.left_ctrl_thumbstickValue[1] * 0.3,
+                                  -tele_data.left_ctrl_thumbstickValue[0] * 0.3,
+                                  -tele_data.right_ctrl_thumbstickValue[0]* 0.3)
+            
 
             # get current robot state data.
             current_lr_arm_q  = arm_ctrl.get_current_dual_arm_q()

@@ -220,8 +220,20 @@ class TeleVuer:
 
     async def on_cam_move(self, event, session, fps=60):
         try:
+            print("CAMERA_MOVE event received!")
+            
+            print(
+            f"[CAMERA_MOVE] received, value keys: {event.value.keys() if event.value else None}"
+            )                
+
+            print("Event value keys:", event.value.keys())
+            print("Camera matrix:", event.value["camera"]["matrix"]) 
+            print("Camera matrix:", event.value["matrix"])   
+
+
             with self.head_pose_shared.get_lock():
-                self.head_pose_shared[:] = event.value["camera"]["matrix"]
+                # self.head_pose_shared[:] = event.value["camera"]["matrix"]
+                self.head_pose_shared[:] = event.value.get("matrix", None)
         except:
             pass
 

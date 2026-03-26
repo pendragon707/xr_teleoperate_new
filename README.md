@@ -140,6 +140,10 @@ pip install 'vuer[all]'
 (tv) unitree@Host:~/xr_teleoperate$ cd teleop/televuer
 (tv) unitree@Host:~/xr_teleoperate/teleop/televuer$ pip install -e .
 
+(tv) unitree@Host:~/xr_teleoperate$ cd teleop/robot_control/dex-retargeting
+(tv) unitree@Host:~/xr_teleoperate/teleop/robot_control/dex-retargeting$  pip install -e .
+
+
 # Configure SSL certificates for the televuer module so that XR devices (e.g., Pico / Quest / Apple Vision Pro) can securely connect via HTTPS / WebRTC
 # 1. Generate certificate files
 # 1.1 For Pico / Quest XR devices
