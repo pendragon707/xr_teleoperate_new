@@ -275,6 +275,12 @@ if __name__ == '__main__':
                 # head_img = img_client.get_head_frame()
                 # tv_wrapper.render_to_xr(head_img)
 
+                if args.input_mode == "controller":
+                    # start teleoperate
+                    if tele_data.right_ctrl_bButton:
+                        START = True
+                        STOP = False
+
         logger_mp.info("---------------------🚀start Tracking🚀-------------------------")
         arm_ctrl.speed_gradual_max()
         # main loop. robot start to follow VR user's motion
