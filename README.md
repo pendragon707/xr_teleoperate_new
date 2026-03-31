@@ -126,7 +126,7 @@ For more information, you can refer to [Official Documentation ](https://support
 # Shallow clone submodule
 (tv) unitree@Host:~/xr_teleoperate$ git submodule update --init --depth 1
 
-pip install 'vuer[all]'
+pip install 'vuer[all]==0.0.60'
 ```
 
 ```bash
@@ -475,6 +475,29 @@ Same as simulation but follow the safety warnings above.
 
 Same as simulation but follow the safety warnings above.
 
+
+# Fast Phisical Deployment 
+
+```bash
+sudo apt update
+sudo apt install sshpass
+```
+
+```bash
+chmod +x robot_launcher/1_start_remote_server.sh
+chmod +x robot_launcher/2_start_local_clients.sh
+```
+
+On Robot (PC2) run sudo visudo and add this line at the bottom:
+
+```bash
+unitree ALL=(ALL) NOPASSWD: /sbin/ip link set wlan0 down
+```
+
+```bash
+./robot_launcher/1_start_remote_server.sh
+./robot_launcher/2_start_local_clients.sh
+```
 
 
 # 4. 🗺️ Codebase Overview
