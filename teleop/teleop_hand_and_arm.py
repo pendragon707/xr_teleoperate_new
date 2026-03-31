@@ -31,6 +31,7 @@ def publish_reset_category(category: int, publisher): # Scene Reset signal
     logger_mp.info(f"published reset category: {category}")
 
 # state transition
+SQUAT          = False
 START          = False  # Enable to start robot following VR user motion
 STOP           = False  # Enable to begin system exit procedure
 READY          = False  # Ready to (1) enter START state, (2) enter RECORD_RUNNING state
@@ -374,6 +375,16 @@ if __name__ == '__main__':
                 loco_wrapper.Move(-tele_data.left_ctrl_thumbstickValue[1] * args.speed,
                                   -tele_data.left_ctrl_thumbstickValue[0] * args.speed,
                                   -tele_data.right_ctrl_thumbstickValue[0]* args.speed)
+
+                if tele_data.left_ctrl_bButton:
+                    if SQUAT:
+                        # sport_client.Damp()
+                        # time.sleep(0.5)
+                        loco_wrapper.Squat2StandUp()
+                        SQUAT = False
+                    else:
+                        loco_wrapper.StandUp2Squat()
+                        SQUAT = True
 
             # get current robot state data.
             current_lr_arm_q  = arm_ctrl.get_current_dual_arm_q()
