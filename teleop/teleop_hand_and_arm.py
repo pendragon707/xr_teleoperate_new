@@ -392,7 +392,7 @@ if __name__ == '__main__':
                         target_yaw=current_head_yaw,
                         current_waist_q=current_waist_q,
                         current_waist_dq=current_waist_dq,
-                        yaw_limits=(-0.5, 0.5),      # ⚠️ CHECK YOUR ROBOT'S ACTUAL LIMITS
+                        yaw_limits=(-2.618, 2.618),      # WAIST_YAW=(-2.618~2.618) rad, docs: https://support.unitree.com/home/en/G1_developer
                         max_velocity=2.0,            # rad/s - adjust for smoothness
                         smoothing_alpha=0.15         # higher = more responsive, lower = smoother
                     )                 

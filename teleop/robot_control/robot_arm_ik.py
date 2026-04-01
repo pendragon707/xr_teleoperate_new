@@ -310,7 +310,7 @@ class G1_29_ArmIK:
             return current_lr_arm_motor_q, np.zeros(self.reduced_robot.model.nv)
         
     def solve_waist_ik(target_yaw, current_waist_q, current_waist_dq, 
-                    yaw_limits=(-0.5, 0.5),  # rad, adjust to your robot specs
+                    yaw_limits=(-2.618, 2.618),  # rad
                     max_velocity=2.0,         # rad/s
                     smoothing_alpha=0.1):     # 0.0=heavy smooth, 1.0=no smooth
         """
