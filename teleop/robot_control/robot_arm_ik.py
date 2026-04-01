@@ -53,9 +53,9 @@ class G1_29_ArmIK:
                                             "right_knee_joint" ,
                                             "right_ankle_pitch_joint" ,
                                             "right_ankle_roll_joint" ,
-                                            "waist_yaw_joint" ,
-                                            "waist_roll_joint" ,
-                                            "waist_pitch_joint" ,
+                                            # "waist_yaw_joint" ,
+                                            "waist_roll_joint" ,    # не уверена, не стоит ли это убрать
+                                            "waist_pitch_joint" ,   # не уверена, не стоит ли это убрать
                                             
                                             "left_hand_thumb_0_joint" ,
                                             "left_hand_thumb_1_joint" ,
@@ -309,6 +309,35 @@ class G1_29_ArmIK:
             # return sol_q, sol_tauff
             return current_lr_arm_motor_q, np.zeros(self.reduced_robot.model.nv)
         
+    def solve_waist_ik(target_yaw, current_waist_q, current_waist_dq, 
+                    yaw_limits=(-0.5, 0.5),  # rad, adjust to your robot specs
+                    max_velocity=2.0,         # rad/s
+                    smoothing_alpha=0.1):     # 0.0=heavy smooth, 1.0=no smooth
+        """
+        Simple waist yaw 'IK' - just constrained position control.
+        Returns: (target_q, feedforward_tau)
+        """
+        # 1. Wrap angle to [-π, π] to avoid 2π jumps
+        target_yaw = np.arctan2(np.sin(target_yaw), np.cos(target_yaw))
+        
+        # 2. Clip to joint limits
+        target_yaw = np.clip(target_yaw, yaw_limits[0], yaw_limits[1])
+        
+        # 3. Smooth the target (exponential moving average)
+        smoothed_yaw = (1 - smoothing_alpha) * current_waist_q + smoothing_alpha * target_yaw
+        
+        # 4. Velocity limiting (optional but recommended)
+        delta_q = smoothed_yaw - current_waist_q
+        max_delta = max_velocity * (1.0 / 250.0)  # control_dt = 1/250
+        if abs(delta_q) > max_delta:
+            smoothed_yaw = current_waist_q + np.sign(delta_q) * max_delta
+        
+        # 5. Simple feedforward torque (optional - can be zero for position control)
+        # Using PD feedforward: tau_ff = Kd * (dq_target - dq_current)
+        tauff = 0.0  # or: tauff = 0.5 * (0 - current_waist_dq) for damping
+        
+        return np.array([smoothed_yaw]), np.array([tauff])
+
 class G1_23_ArmIK:
     def __init__(self, Unit_Test = False, Visualization = False):
         np.set_printoptions(precision=5, suppress=True, linewidth=200)

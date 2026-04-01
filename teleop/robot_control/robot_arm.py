@@ -59,7 +59,7 @@ class DataBuffer:
             self.data = data
 
 class G1_29_ArmController:
-    def __init__(self, motion_mode = False, simulation_mode = False):
+    def __init__(self, motion_mode = False, simulation_mode = False, waist_enabled = False):
         logger_mp.info("Initialize G1_29_ArmController...")
         self.q_target = np.zeros(14)
         self.tauff_target = np.zeros(14)
@@ -79,6 +79,11 @@ class G1_29_ArmController:
         self._speed_gradual_max = False
         self._gradual_start_time = None
         self._gradual_time = None
+
+        # Add waist control state
+        self.waist_q_target = 0.0
+        self.waist_tauff_target = 0.0   
+        self.waist_enabled = waist_enabled       # Safety flag
 
         if self.motion_mode:
             self.lowcmd_publisher = ChannelPublisher(kTopicLowCommand_Motion, hg_LowCmd)
@@ -166,6 +171,10 @@ class G1_29_ArmController:
             with self.ctrl_lock:
                 arm_q_target     = self.q_target
                 arm_tauff_target = self.tauff_target
+                
+                # Read waist target inside lock for thread safety
+                waist_q_target = self.waist_q_target 
+                waist_tauff_target = self.waist_tauff_target
 
             if self.simulation_mode:
                 cliped_arm_q_target = arm_q_target
@@ -176,6 +185,12 @@ class G1_29_ArmController:
                 self.msg.motor_cmd[id].q = cliped_arm_q_target[idx]
                 self.msg.motor_cmd[id].dq = 0
                 self.msg.motor_cmd[id].tau = arm_tauff_target[idx]   
+
+            # Control waist yaw joint (index 12) if enabled
+            if self.waist_enabled:
+                self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].q = waist_q_target
+                self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].dq = 0  # Could add velocity control
+                self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].tau = waist_tauff_target  # Feedforward torque if needed
 
             self.msg.crc = self.crc.Crc(self.msg)
             self.lowcmd_publisher.Write(self.msg)
@@ -197,6 +212,18 @@ class G1_29_ArmController:
             self.q_target = q_target
             self.tauff_target = tauff_target
 
+    def set_waist_yaw_target(self, waist_q_target, waist_tauff_target):
+        """Set target position for waist yaw joint (index 12)."""
+        WAIST_YAW_LIMITS = (-0.5, 0.5)  # rad
+        MAX_WAIST_VELOCITY = 3.0  # rad/s
+
+        with self.ctrl_lock:
+            if self.waist_enabled:
+                waist_q_target = np.clip(waist_q_target, WAIST_YAW_LIMITS[0], WAIST_YAW_LIMITS[1])
+
+                self.waist_q_target = waist_q_target
+                self.waist_tauff_target = waist_tauff_target            
+
     def get_mode_machine(self):
         '''Return current dds mode machine.'''
         return self.lowstate_subscriber.Read().mode_machine
@@ -212,6 +239,14 @@ class G1_29_ArmController:
     def get_current_dual_arm_dq(self):
         '''Return current state dq of the left and right arm motors.'''
         return np.array([self.lowstate_buffer.GetData().motor_state[id].dq for id in G1_29_JointArmIndex])
+
+    def get_current_waist_q(self):
+        '''Return current state q of the waist motors.'''
+        return self.lowstate_buffer.GetData().motor_state[G1_29_JointIndex.kWaistYaw].q
+
+    def get_current_waist_dq(self):
+        '''Return current state dq of the waist motors.'''
+        return self.lowstate_buffer.GetData().motor_state[G1_29_JointIndex.kWaistYaw].dq        
     
     def ctrl_dual_arm_go_home(self):
         '''Move both the left and right arms of the robot to their home position by setting the target joint angles (q) and torques (tau) to zero.'''

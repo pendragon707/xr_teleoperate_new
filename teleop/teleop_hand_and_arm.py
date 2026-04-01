@@ -149,7 +149,7 @@ if __name__ == '__main__':
         # arm
         if args.arm == "G1_29":
             arm_ik = G1_29_ArmIK()
-            arm_ctrl = G1_29_ArmController(motion_mode=args.motion, simulation_mode=args.sim)
+            arm_ctrl = G1_29_ArmController(motion_mode=args.motion, simulation_mode=args.sim, waist_enabled=args.head_rotate)
         elif args.arm == "G1_23":
             arm_ik = G1_23_ArmIK()
             arm_ctrl = G1_23_ArmController(motion_mode=args.motion, simulation_mode=args.sim)
@@ -382,30 +382,29 @@ if __name__ == '__main__':
 
                     logger_mp.info(f"current_head_yaw {current_head_yaw}") 
 
-                    # Как-то так можно объединить джойстик и поворот головы. Потом.
-                    # if tele_data.tele_state.left_thumbstick_state: 
-                    #     self.head_yaw_ref = current_head_yaw  
-                    head_yaw_ref = 0
+                    # only torso rotate
+                    # get current robot state data.
+                    current_waist_q  = arm_ctrl.get_current_waist_q()
+                    current_waist_dq = arm_ctrl.get_current_waist_dq()                    
 
-                    yaw_diff = current_head_yaw - head_yaw_ref
+                    # solve waist "ik" (simple constrained mapping)
+                    sol_waist_q, sol_waist_tauff = solve_waist_ik(
+                        target_yaw=current_head_yaw,
+                        current_waist_q=current_waist_q,
+                        current_waist_dq=current_waist_dq,
+                        yaw_limits=(-0.5, 0.5),      # ⚠️ CHECK YOUR ROBOT'S ACTUAL LIMITS
+                        max_velocity=2.0,            # rad/s - adjust for smoothness
+                        smoothing_alpha=0.15         # higher = more responsive, lower = smoother
+                    )                 
 
-                    # limit velocity to within 0.3
-                    YAW_GAIN = 2.0 
-                    robot_angular_vel = -yaw_diff * YAW_GAIN
-                    robot_angular_vel = np.clip(robot_angular_vel, -0.3, 0.3)        
+                    # Send to arm controller
+                    arm_ctrl.set_waist_yaw_target(sol_waist_q[0], sol_waist_tauff[0])
+    
 
-                    logger_mp.info(f"robot_angular_vel {robot_angular_vel}") 
-
-                    loco_wrapper.Move(-tele_data.left_ctrl_thumbstickValue[1]  * 0.3,
-                                  -tele_data.left_ctrl_thumbstickValue[0]  * 0.3,
-                                  robot_angular_vel)
-
-                else:
-                    logger_mp.info("NOT HEAD head_rotate")
-                    # control, limit velocity to within 0.3
-                    loco_wrapper.Move(-tele_data.left_ctrl_thumbstickValue[1] * 0.3,
-                                  -tele_data.left_ctrl_thumbstickValue[0] * 0.3,
-                                  -tele_data.right_ctrl_thumbstickValue[0]* 0.3)
+                # control, limit velocity to within 0.3
+                loco_wrapper.Move(-tele_data.left_ctrl_thumbstickValue[1] * 0.3,
+                                -tele_data.left_ctrl_thumbstickValue[0] * 0.3,
+                                -tele_data.right_ctrl_thumbstickValue[0]* 0.3)
             
 
             # get current robot state data.
