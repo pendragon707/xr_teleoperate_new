@@ -188,9 +188,12 @@ class G1_29_ArmController:
 
             # Control waist yaw joint (index 12) if enabled
             if self.waist_enabled:
-                self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].q = waist_q_target
-                self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].dq = 0  # Could add velocity control
-                self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].tau = waist_tauff_target  # Feedforward torque if needed
+                logger_mp.info("_ctrl_motor_state: waist_q_target ", waist_q_target)
+                logger_mp.info("_ctrl_motor_state: waist_tauff_target=0 ", waist_tauff_target)
+                # self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].q = waist_q_target
+                # self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].dq = 0  # Could add velocity control
+                # self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].tau = 0  # Feedforward torque if needed
+                # # self.msg.motor_cmd[G1_29_JointIndex.kWaistYaw].tau = waist_tauff_target  # Feedforward torque if needed
 
             self.msg.crc = self.crc.Crc(self.msg)
             self.lowcmd_publisher.Write(self.msg)
@@ -214,7 +217,7 @@ class G1_29_ArmController:
 
     def set_waist_yaw_target(self, waist_q_target, waist_tauff_target):
         """Set target position for waist yaw joint (index 12)."""
-        WAIST_YAW_LIMITS = (-0.5, 0.5)  # rad
+        WAIST_YAW_LIMITS = (-2.618, 2.618)  # rad
         MAX_WAIST_VELOCITY = 3.0  # rad/s
 
         with self.ctrl_lock:
