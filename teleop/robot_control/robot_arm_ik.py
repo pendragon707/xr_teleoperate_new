@@ -317,6 +317,9 @@ class G1_29_ArmIK:
         Simple waist yaw 'IK' - just constrained position control.
         Returns: (target_q, feedforward_tau)
         """
+
+        logger_mp.info(f"SOLVER solve_waist_ik: target_yaw {target_yaw}")
+
         # 1. Wrap angle to [-π, π] to avoid 2π jumps
         target_yaw = np.arctan2(np.sin(target_yaw), np.cos(target_yaw))
         

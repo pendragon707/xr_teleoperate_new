@@ -380,22 +380,26 @@ if __name__ == '__main__':
                     except Exception:
                         current_head_yaw = 0.0     
 
-                    logger_mp.info(f"current_head_yaw {current_head_yaw}") 
+                    logger_mp.info(f"HEAD current_head_yaw {current_head_yaw}") 
 
                     # only torso rotate
                     # get current robot state data.
                     current_waist_q  = arm_ctrl.get_current_waist_q()
-                    current_waist_dq = arm_ctrl.get_current_waist_dq()                    
+                    current_waist_dq = arm_ctrl.get_current_waist_dq() 
+
+                    logger_mp.info(f"HEAD current_waist_q {current_waist_q}")                 
 
                     # solve waist "ik" (simple constrained mapping)
-                    sol_waist_q, sol_waist_tauff = solve_waist_ik(
+                    sol_waist_q, sol_waist_tauff = arm_ctrl.solve_waist_ik(
                         target_yaw=current_head_yaw,
                         current_waist_q=current_waist_q,
                         current_waist_dq=current_waist_dq,
                         yaw_limits=(-2.618, 2.618),      # WAIST_YAW=(-2.618~2.618) rad, docs: https://support.unitree.com/home/en/G1_developer
                         max_velocity=2.0,            # rad/s - adjust for smoothness
                         smoothing_alpha=0.15         # higher = more responsive, lower = smoother
-                    )                 
+                    )            
+
+                    logger_mp.info(f"sol_waist_q 0 {sol_waist_q[0]}")      
 
                     # Send to arm controller
                     arm_ctrl.set_waist_yaw_target(sol_waist_q[0], sol_waist_tauff[0])
